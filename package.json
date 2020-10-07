@@ -4,7 +4,8 @@
     "main": "index.js",
     "license": "MIT",
     "scripts": {
-        "dev": "env-cmd nodemon ./bin/www"
+        "dev": "env-cmd nodemon ./bin/www",
+        "start": "node ./bin/www"
     },
     "dependencies": {
         "express": "^4.17.1"
