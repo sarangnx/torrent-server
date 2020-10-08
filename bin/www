@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+
+const app = require('../src/app').app;
+const server = require('../src/app').server;
+
+const port = process.env.PORT || '3000';
+app.set('port', port);
+
+server.listen(port);
+server.on('listening', () => {
+    console.log(`Server up and running on port : ${port}`);
+});
