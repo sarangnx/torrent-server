@@ -10,7 +10,7 @@ module.exports = {
             data.torrent = req.file;
         }
 
-        await Service.addTorrent(data);
-        res.json({ message: 'Torrent Added.' });
+        const metadata = await Service.addTorrent(data);
+        res.json({ message: 'Torrent Added.', metadata });
     }
 };

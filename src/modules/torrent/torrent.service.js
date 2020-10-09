@@ -20,6 +20,22 @@ module.exports = {
         if (!data.torrent) throw new Error('A torrent file, magnet uri or link to torrent file required.');
 
         const parsed = await this.parse(data.torrent);
+
+        // Push magnetURI to torrents array for future reference
+        this.torrents.push({
+            infoHash: parsed.infoHash,
+            magnetURI: parsed.magnetURI.replace('magnet:?so=-1&', 'magnet:?')
+        });
+
+        // get only relevent info from Files
+        const files = parsed.files.map(({ name, path, length }) => ({ name, path, length }));
+
+        return {
+            files: files,
+            name: parsed.name,
+            length: parsed.length,
+            infoHash: parsed.infoHash
+        };
     },
 
     /**
