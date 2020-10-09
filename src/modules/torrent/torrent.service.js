@@ -3,8 +3,6 @@ const WebTorrent = require('webtorrent');
 const parseTorrent = require('parse-torrent');
 const { isMagnetURI, isURL } = require('validator');
 
-const client = new WebTorrent();
-
 module.exports = {
     /**
      * Store queued torrent magnet uri, file or link
@@ -21,8 +19,7 @@ module.exports = {
     async addTorrent(data = {}) {
         if (!data.torrent) throw new Error('A torrent file, magnet uri or link to torrent file required.');
 
-        const metadata = await this.parse(data.torrent);
-        console.log(metadata);
+        const parsed = await this.parse(data.torrent);
     },
 
     /**
@@ -73,6 +70,7 @@ module.exports = {
         // Get complete metadata of the torrent using webtorrent client.
         // when using magnet links parse-torrent does not provide list of files.
         const metadata = await new Promise((resolve) => {
+            const client = new WebTorrent();
             client.add(torrent, (t) => resolve(t));
         });
 
