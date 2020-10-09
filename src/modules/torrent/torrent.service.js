@@ -21,11 +21,14 @@ module.exports = {
 
         const parsed = await this.parse(data.torrent);
 
-        // Push magnetURI to torrents array for future reference
-        this.torrents.push({
-            infoHash: parsed.infoHash,
-            magnetURI: parsed.magnetURI.replace('magnet:?so=-1&', 'magnet:?')
-        });
+        // Push magnetURI to torrents array for future reference & avoid duplicates
+        const index = this.torrents.findIndex((t) => t.infoHash === parsed.infoHash);
+        if (index === -1) {
+            this.torrents.push({
+                infoHash: parsed.infoHash,
+                magnetURI: parsed.magnetURI.replace('magnet:?so=-1&', 'magnet:?')
+            });
+        }
 
         // get only relevent info from Files
         const files = parsed.files.map(({ name, path, length }) => ({ name, path, length }));
