@@ -2,6 +2,7 @@ const axios = require('axios');
 const WebTorrent = require('webtorrent');
 const parseTorrent = require('parse-torrent');
 const { isMagnetURI, isURL } = require('validator');
+const { APIError } = require('../../utils/error');
 
 module.exports = {
     /**
@@ -17,7 +18,7 @@ module.exports = {
      * @param {String|Object} data.torrent - Magnet URI, torrent file buffer or link to torrent file
      */
     async addTorrent(data = {}) {
-        if (!data.torrent) throw new Error('A torrent file, magnet uri or link to torrent file required.');
+        if (!data.torrent) throw new APIError('A torrent file, magnet uri or link to torrent file required.', 400);
 
         const parsed = await this.parse(data.torrent);
 
@@ -60,7 +61,7 @@ module.exports = {
                 torrent = parseTorrent(torrent.buffer);
                 torrent.so = '-1';
             } catch (err) {
-                throw new Error('Invalid Torrent File.');
+                throw new APIError('Invalid Torrent File.', 400);
             }
         } else if (isMagnetURI(torrent)) {
             // Parse Magnet URI
@@ -68,7 +69,7 @@ module.exports = {
                 torrent = parseTorrent(torrent);
                 torrent.so = '-1';
             } catch (err) {
-                throw new Error('Invalid Magnet URI.');
+                throw new APIError('Invalid Magnet URI.', 400);
             }
         } else if (isURL(torrent)) {
             // fetch torrent from url and parse
@@ -80,10 +81,10 @@ module.exports = {
                 torrent = parseTorrent(res.data);
                 torrent.so = '-1';
             } catch (err) {
-                throw new Error('URL returned an invalid torrent.');
+                throw new APIError('URL returned an invalid torrent.', 400);
             }
         } else {
-            throw new Error('A valid torrent file, magnet uri or link to torrent file required.');
+            throw new APIError('A valid torrent file, magnet uri or link to torrent file required.', 400);
         }
 
         // Get complete metadata of the torrent using webtorrent client.
