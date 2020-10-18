@@ -29,11 +29,9 @@ module.exports = {
         const parsed = await this.parse(data.torrent);
 
         // check if the parsed torrent is already in list of torrents of `uid`
-        const index =
-            this.torrents[data.uid] &&
-            this.torrents[data.uid].findIndex((t) => {
-                return t.infoHash === parsed.infoHash;
-            });
+        const index = this.torrents[data.uid]
+            ? this.torrents[data.uid].findIndex((t) => t.infoHash === parsed.infoHash)
+            : -1;
 
         if (index !== -1) {
             throw new APIError('This torrent was already added to queue.', 400);
