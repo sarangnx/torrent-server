@@ -21,6 +21,7 @@ module.exports = {
      *
      * @param {Object} data
      * @param {String|Object} data.torrent - Magnet URI, torrent file buffer or link to torrent file
+     * @param {String} data.uid - UUID4 User ID
      */
     async addTorrent(data = {}) {
         if (!data.torrent) throw new APIError('A torrent file, magnet uri or link to torrent file required.', 400);
@@ -107,5 +108,32 @@ module.exports = {
         });
 
         return metadata;
+    },
+
+    /**
+     * Get list of all torrents of a user
+     *
+     * @param {String} uid - UUID4 user ID
+     */
+    listTorrent(uid) {
+        if (!uid) throw new APIError('User ID Missing.', 400);
+
+        const torrents = this.torrents[uid];
+        if (!torrents) return [];
+
+        // strip all unimportant data before sending to frontend
+        const filtered = torrents.map((t) => {
+            // get only relevent info from Files
+            const files = t.files.map(({ name, path, length }) => ({ name, path, length }));
+
+            return {
+                files: files,
+                name: t.name,
+                length: t.length,
+                infoHash: t.infoHash
+            };
+        });
+
+        return filtered;
     }
 };

@@ -16,5 +16,16 @@ module.exports = {
         } catch (err) {
             next(err);
         }
+    },
+
+    async listTorrent(req, res, next) {
+        try {
+            const { uid } = req.query;
+
+            const torrents = Service.listTorrent(uid);
+            res.json({ torrents });
+        } catch (err) {
+            next(err);
+        }
     }
 };
