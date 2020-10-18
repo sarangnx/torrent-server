@@ -7,6 +7,14 @@ const { APIError } = require('../../utils/error');
 module.exports = {
     /**
      * Store queued torrent magnet uri, file or link
+     *
+     * storage format
+     * torrents: [
+     *   {
+     *     uid: 'uuid4-hash',
+           torrent: { ...parsed-torrent }
+     *   }
+     * ]
      */
     torrents: [],
 
@@ -19,17 +27,23 @@ module.exports = {
      */
     async addTorrent(data = {}) {
         if (!data.torrent) throw new APIError('A torrent file, magnet uri or link to torrent file required.', 400);
+        if (!data.uid) throw new APIError('User ID Missing. Please Reload Client.', 400);
 
         const parsed = await this.parse(data.torrent);
 
         // Push magnetURI to torrents array for future reference & avoid duplicates
-        const index = this.torrents.findIndex((t) => t.infoHash === parsed.infoHash);
-        if (index === -1) {
-            this.torrents.push({
-                infoHash: parsed.infoHash,
-                magnetURI: parsed.magnetURI.replace('magnet:?so=-1&', 'magnet:?')
-            });
+        const index = this.torrents.findIndex((t) => {
+            return t.uid === data.uid && t.torrent && t.torrent.infoHash === parsed.infoHash;
+        });
+
+        if (index !== -1) {
+            throw new APIError('This torrent was already added to queue.', 400);
         }
+
+        this.torrents.push({
+            uid: data.uid,
+            torrent: parsed
+        });
 
         // get only relevent info from Files
         const files = parsed.files.map(({ name, path, length }) => ({ name, path, length }));
