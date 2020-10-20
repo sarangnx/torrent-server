@@ -13,7 +13,7 @@ module.exports = {
      *   [uid]: [ { ...parsed-torrent }, { ...parsed-torrent } ]
      * }
      */
-    torrents: [],
+    torrents: {},
 
     /**
      * Parse torrent from magnet, file or link to torrent file
