@@ -1,3 +1,6 @@
+const { APIError } = require('../../utils/error');
+const Gapi = require('../../utils/gapi');
+
 module.exports = {
     /**
      * Store User details
@@ -23,5 +26,35 @@ module.exports = {
         if (this._users[uid]) return;
 
         this._users[uid] = {};
+    },
+
+    /**
+     * Generate URL for google oauth flow
+     *
+     * @param {String} uid - UUID4 User ID
+     */
+    async generateURL(uid) {
+        const gapi = new Gapi();
+        this.addUser(uid);
+
+        const url = await gapi.geneateURL(uid);
+        return url;
+    },
+
+    /**
+     * Handle redirect from google auth server. Use code from google
+     * server to acquire tokens, and set them to client instance.
+     *
+     * @param {Object} data - Data from callback query params
+     * @param {String} data.state - UUID4 User ID
+     * @param {String} data.code - Code returned from google auth server
+     */
+    async authCallback(data) {
+        const gapi = new Gapi();
+        const uid = data.state;
+
+        const { tokens } = await gapi.client.getToken(data.code);
+
+        this._users[uid].tokens = tokens;
     }
 };
