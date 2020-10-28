@@ -29,6 +29,17 @@ module.exports = {
     },
 
     /**
+     * Get details of user
+     *
+     * @param {String} uid - UUID4 User ID
+     */
+    getUser(uid) {
+        if (!uid) throw new APIError('User ID Required.', 400);
+
+        return this._users[uid];
+    },
+
+    /**
      * Generate URL for google oauth flow
      *
      * @param {String} uid - UUID4 User ID
