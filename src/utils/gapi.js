@@ -133,4 +133,27 @@ module.exports = class Gapi {
 
         return cwd.id;
     }
+
+    /**
+     * Upload a file to google drive.
+     * File is uploaded to BlackPearl/path
+     *
+     * @param {String} path - Full path including the file name
+     * @param {ReadableStream} stream - File stream to be uploaded to drive
+     */
+    async upload(path, stream) {
+        // extract filename from path
+        path = path.split('/');
+        const filename = path.pop();
+        path = path.join('/');
+
+        // create folder in google drive
+        const Folder = await this.createFolder(path);
+
+        // upload file to google drive
+        await this.drive.files.create({
+            resource: { name: filename, parents: [Folder] },
+            media: { body: stream }
+        });
+    }
 };
