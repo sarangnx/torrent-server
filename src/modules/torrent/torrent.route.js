@@ -6,5 +6,7 @@ module.exports = function (router) {
 
     router.get('/list', Controller.listTorrent);
 
+    router.post('/download', Controller.download);
+
     return router;
 };

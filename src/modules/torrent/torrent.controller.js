@@ -27,5 +27,16 @@ module.exports = {
         } catch (err) {
             next(err);
         }
+    },
+
+    async download(req, res, next) {
+        try {
+            const data = req.body;
+
+            Service.download(data);
+            res.json({ message: 'Download started.' });
+        } catch (err) {
+            next(err);
+        }
     }
 };

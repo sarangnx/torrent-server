@@ -3,6 +3,8 @@ const WebTorrent = require('webtorrent');
 const parseTorrent = require('parse-torrent');
 const { isMagnetURI, isURL } = require('validator');
 const { APIError } = require('../../utils/error');
+const UserService = require('../users/users.service');
+const Gapi = require('../../utils/gapi');
 
 module.exports = {
     /**
@@ -27,6 +29,9 @@ module.exports = {
         if (!data.torrent) throw new APIError('A torrent file, magnet uri or link to torrent file required.', 400);
         if (!data.uid) throw new APIError('User ID Missing. Please Reload Client.', 400);
 
+        // add user
+        UserService.addUser(data.uid);
+
         const parsed = await this.parse(data.torrent);
 
         // check if the parsed torrent is already in list of torrents of `uid`
@@ -41,11 +46,18 @@ module.exports = {
         if (!this.torrents[data.uid]) {
             this.torrents[data.uid] = [];
         }
-        // Push parsed torrents for future reference & avoid duplicates
-        this.torrents[data.uid].push(parsed);
 
         // get only relevent info from Files
         const files = parsed.files.map(({ name, path, length }) => ({ name, path, length }));
+
+        // Push parsed torrents for future reference & avoid duplicates
+        this.torrents[data.uid].push({
+            files: files,
+            name: parsed.name,
+            length: parsed.length,
+            infoHash: parsed.infoHash,
+            magnetURI: parsed.magnetURI
+        });
 
         return {
             files: files,
@@ -135,5 +147,32 @@ module.exports = {
         });
 
         return filtered;
+    },
+
+    /**
+     * Add selected torrent or part of torrent to downloads
+     *
+     * @param {Object} data - Torrent Details
+     */
+    async download(data) {
+        if (!data.uid) throw new APIError('User ID Missing.', 400);
+
+        const torrents = this.torrents[data.uid];
+        const user = UserService.getUser(data.uid);
+        if (!user.tokens) throw new APIError('Authorize Google Drive before starting download', 401);
+
+        const torrent = torrents.find((t) => t.name === data.name);
+        const parsed = parseTorrent(torrent.magnetURI);
+
+        const client = new WebTorrent();
+        const gapi = new Gapi(user.tokens);
+
+        client.add(parsed, (t) => {
+            if (data.type === 'file') {
+                let index = t.files.findIndex((f) => f.name === data.item.name);
+                let stream = t.files[index].createReadStream();
+                gapi.upload(data.item.path, stream);
+            }
+        });
     }
 };
