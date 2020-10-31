@@ -167,11 +167,30 @@ module.exports = {
         const client = new WebTorrent();
         const gapi = new Gapi(user.tokens);
 
-        client.add(parsed, (t) => {
+        client.add(parsed, async (t) => {
+            // upload single file
             if (data.type === 'file') {
                 let index = t.files.findIndex((f) => f.name === data.item.name);
                 let stream = t.files[index].createReadStream();
-                gapi.upload(data.item.path, stream);
+                await gapi.upload(t.files[index].path, stream);
+            }
+
+            // upload a folder
+            if (data.type === 'folder') {
+                for (let index in t.files) {
+                    if (t.files[index].path.startsWith(data.item.path)) {
+                        let stream = t.files[index].createReadStream();
+                        await gapi.upload(t.files[index].path, stream);
+                    }
+                }
+            }
+
+            // upload complete torrent
+            if (data.type === 'torrent') {
+                for (let index in t.files) {
+                    let stream = t.files[index].createReadStream();
+                    await gapi.upload(t.files[index].path, stream);
+                }
             }
         });
     }
