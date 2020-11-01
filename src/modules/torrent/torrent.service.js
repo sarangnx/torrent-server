@@ -5,6 +5,7 @@ const { isMagnetURI, isURL } = require('validator');
 const { APIError } = require('../../utils/error');
 const UserService = require('../users/users.service');
 const Gapi = require('../../utils/gapi');
+const Events = require('../../utils/events');
 
 module.exports = {
     /**
@@ -155,43 +156,48 @@ module.exports = {
      * @param {Object} data - Torrent Details
      */
     async download(data) {
-        if (!data.uid) throw new APIError('User ID Missing.', 400);
+        try {
+            if (!data.uid) throw new APIError('User ID Missing.', 400);
 
-        const torrents = this.torrents[data.uid];
-        const user = UserService.getUser(data.uid);
-        if (!user.tokens) throw new APIError('Authorize Google Drive before starting download', 401);
+            const torrents = this.torrents[data.uid];
+            const user = UserService.getUser(data.uid);
+            if (!user.tokens) throw new APIError('Authorize Google Drive before starting download', 401);
 
-        const torrent = torrents.find((t) => t.name === data.name);
-        const parsed = parseTorrent(torrent.magnetURI);
+            const torrent = torrents.find((t) => t.name === data.name);
+            const parsed = parseTorrent(torrent.magnetURI);
 
-        const client = new WebTorrent();
-        const gapi = new Gapi(user.tokens);
+            const client = new WebTorrent();
+            const gapi = new Gapi(user.tokens);
 
-        client.add(parsed, async (t) => {
-            // upload single file
-            if (data.type === 'file') {
-                let index = t.files.findIndex((f) => f.name === data.item.name);
-                let stream = t.files[index].createReadStream();
-                await gapi.upload(t.files[index].path, stream);
-            }
+            client.add(parsed, async (t) => {
+                // upload single file
+                if (data.type === 'file') {
+                    let index = t.files.findIndex((f) => f.name === data.item.name);
+                    let stream = t.files[index].createReadStream();
+                    await gapi.upload(t.files[index].path, stream);
+                }
 
-            // upload a folder
-            if (data.type === 'folder') {
-                for (let index in t.files) {
-                    if (t.files[index].path.startsWith(data.item.path)) {
+                // upload a folder
+                if (data.type === 'folder') {
+                    for (let index in t.files) {
+                        if (t.files[index].path.startsWith(data.item.path)) {
+                            let stream = t.files[index].createReadStream();
+                            await gapi.upload(t.files[index].path, stream);
+                        }
+                    }
+                }
+
+                // upload complete torrent
+                if (data.type === 'torrent') {
+                    for (let index in t.files) {
                         let stream = t.files[index].createReadStream();
                         await gapi.upload(t.files[index].path, stream);
                     }
                 }
-            }
-
-            // upload complete torrent
-            if (data.type === 'torrent') {
-                for (let index in t.files) {
-                    let stream = t.files[index].createReadStream();
-                    await gapi.upload(t.files[index].path, stream);
-                }
-            }
-        });
+            });
+        } catch (err) {
+            err.roomId = data.uid;
+            Events.error(err);
+        }
     }
 };
