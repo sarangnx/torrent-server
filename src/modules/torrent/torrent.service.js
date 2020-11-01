@@ -6,6 +6,7 @@ const { APIError } = require('../../utils/error');
 const UserService = require('../users/users.service');
 const Gapi = require('../../utils/gapi');
 const Events = require('../../utils/events');
+const socket = require('../../utils/socket');
 
 module.exports = {
     /**
@@ -170,6 +171,12 @@ module.exports = {
             const gapi = new Gapi(user.tokens);
 
             client.add(parsed, async (t) => {
+                socket.message({
+                    roomId: data.uid,
+                    message: 'Torrent Added to Download',
+                    type: 'success'
+                });
+
                 // upload single file
                 if (data.type === 'file') {
                     let index = t.files.findIndex((f) => f.name === data.item.name);
@@ -194,6 +201,12 @@ module.exports = {
                         await gapi.upload(t.files[index].path, stream);
                     }
                 }
+
+                socket.message({
+                    roomId: data.uid,
+                    message: 'Download Completed',
+                    type: 'success'
+                });
             });
         } catch (err) {
             err.roomId = data.uid;
