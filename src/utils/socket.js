@@ -35,6 +35,18 @@ class SocketIO {
             });
         });
     }
+
+    /**
+     * Send Error / Success message to client using rooms
+     *
+     * @param {Object} data - Message options
+     * @param {String} data.roomId - Room Id
+     * @param {String} data.message - Message String
+     * @param {String} data.type - Message Type
+     */
+    message(data) {
+        this.io.sockets.to(data.roomId).emit(`message`, { message: data.message, type: data.type });
+    }
 }
 
 module.exports = new SocketIO();
