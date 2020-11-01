@@ -34,7 +34,7 @@ module.exports = {
             const data = req.body;
 
             Service.download(data);
-            res.json({ message: 'Download started.' });
+            res.end();
         } catch (err) {
             next(err);
         }
