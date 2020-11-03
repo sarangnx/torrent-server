@@ -19,3 +19,34 @@ yarn
 # start server with nodemon
 yarn dev
 ```
+
+## Environment variables
+
+Before you can run the app server, you need to set some variables.
+
+**Google OAuth**
+
+Goto [Google Developer Console](https://console.developers.google.com/apis/credentials)
+and obtain `CLIENT_ID` and `CLIENT_SECRET`.  
+Set `REDIRECT_URL` = `http://host/auth/callback`
+
+**Port**
+
+set any number other than _well-known ports_ when using locally. When deploying to heroku, you cannot use custom ports. Heroku sets `PORT` variable by itself.
+
+```bash
+# THESE ARE THE REQUIRED ENV VARS
+
+NODE_ENV=development
+
+# GOOGLE OAUTH
+CLIENT_ID=xxx.apps.googleusercontent.com
+CLIENT_SECRET=clientsecret
+REDIRECT_URL=http://lvh.me:3000/auth/callback
+
+# PORT
+PORT=3000
+
+# BASEURL OF WEB APP
+WEBAPP_URI=http://localhost:8080
+```
