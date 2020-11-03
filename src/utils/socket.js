@@ -57,6 +57,18 @@ class SocketIO {
     progress(data, roomId) {
         this.io.sockets.to(roomId).emit('progress', data);
     }
+
+    /**
+     * Generic function used to emit socket events
+     *
+     * @param {Object} options
+     * @param {String} options.roomId - Room Id
+     * @param {String} options.event - event name
+     * @param {Object | String} options.data - Data to be sent
+     */
+    emit(options) {
+        this.io.sockets.to(options.roomId).emit(options.event, options.data);
+    }
 }
 
 module.exports = new SocketIO();
