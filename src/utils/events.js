@@ -26,6 +26,12 @@ events.on('error', (err) => {
             message: err.message,
             type: 'error'
         });
+    } else {
+        socket.message({
+            roomId: err.roomId,
+            message: 'Something Went Wrong!',
+            type: 'error'
+        });
     }
 });
 
