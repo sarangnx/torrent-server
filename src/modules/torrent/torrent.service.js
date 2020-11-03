@@ -155,6 +155,12 @@ module.exports = {
      * Add selected torrent or part of torrent to downloads
      *
      * @param {Object} data - Torrent Details
+     * @param {String} data.uid - UUID4 User ID
+     * @param {String} data.name - Torrent Name
+     * @param {String} data.type - Type of download (file, folder, torrent)
+     * @param {Object} data.item - Details of selected file / folder
+     * @param {String} data.item.name - Folder / File name
+     * @param {String} data.item.path - Folder / File path
      */
     async download(data) {
         try {
@@ -181,15 +187,24 @@ module.exports = {
                 if (data.type === 'file') {
                     let index = t.files.findIndex((f) => f.name === data.item.name);
                     let stream = t.files[index].createReadStream();
-                    await gapi.upload(t.files[index].path, stream);
+
+                    await gapi.upload(t.files[index].path, stream, {
+                        roomId: data.uid,
+                        path: t.files[index].path
+                    });
                 }
 
                 // upload a folder
                 if (data.type === 'folder') {
                     for (let index in t.files) {
+                        // filter files in given folder
                         if (t.files[index].path.startsWith(data.item.path)) {
                             let stream = t.files[index].createReadStream();
-                            await gapi.upload(t.files[index].path, stream);
+
+                            await gapi.upload(t.files[index].path, stream, {
+                                roomId: data.uid,
+                                path: t.files[index].path
+                            });
                         }
                     }
                 }
@@ -198,7 +213,11 @@ module.exports = {
                 if (data.type === 'torrent') {
                     for (let index in t.files) {
                         let stream = t.files[index].createReadStream();
-                        await gapi.upload(t.files[index].path, stream);
+
+                        await gapi.upload(t.files[index].path, stream, {
+                            roomId: data.uid,
+                            path: t.files[index].path
+                        });
                     }
                 }
 

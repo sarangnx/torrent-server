@@ -1,4 +1,5 @@
 const { google } = require('googleapis');
+const socket = require('./socket');
 
 module.exports = class Gapi {
     constructor(tokens = null) {
@@ -140,8 +141,11 @@ module.exports = class Gapi {
      *
      * @param {String} path - Full path including the file name
      * @param {ReadableStream} stream - File stream to be uploaded to drive
+     * @param {Object} data - Additional Data
+     * @param {String} data.roomId - Room ID of user
+     * @param {String} data.path - Full path of file
      */
-    async upload(path, stream) {
+    async upload(path, stream, data = {}) {
         // extract filename from path
         path = path.split('/');
         const filename = path.pop();
@@ -151,9 +155,22 @@ module.exports = class Gapi {
         const Folder = await this.createFolder(path);
 
         // upload file to google drive
-        await this.drive.files.create({
-            resource: { name: filename, parents: [Folder] },
-            media: { body: stream }
-        });
+        await this.drive.files.create(
+            {
+                resource: { name: filename, parents: [Folder] },
+                media: { body: stream }
+            },
+            {
+                onUploadProgress: (e) => {
+                    socket.progress(
+                        {
+                            path: data.path,
+                            bytesRead: e.bytesRead
+                        },
+                        data.roomId
+                    );
+                }
+            }
+        );
     }
 };
