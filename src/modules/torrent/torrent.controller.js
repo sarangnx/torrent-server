@@ -33,8 +33,8 @@ module.exports = {
         try {
             const data = req.body;
 
-            Service.download(data);
-            res.end();
+            res.json({ message: 'Download Request Recieved' });
+            await Service.download(data);
         } catch (err) {
             next(err);
         }
