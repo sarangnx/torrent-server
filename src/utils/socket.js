@@ -47,6 +47,16 @@ class SocketIO {
     message(data) {
         this.io.sockets.to(data.roomId).emit(`message`, { message: data.message, type: data.type });
     }
+
+    /**
+     * Send Progress to client
+     *
+     * @param {Object} data - Progress data
+     * @param {String} roomId - Room Id
+     */
+    progress(data, roomId) {
+        this.io.sockets.to(roomId).emit('progress', data);
+    }
 }
 
 module.exports = new SocketIO();
