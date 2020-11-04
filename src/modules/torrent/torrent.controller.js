@@ -38,5 +38,16 @@ module.exports = {
         } catch (err) {
             next(err);
         }
+    },
+
+    async deleteTorrent(req, res, next) {
+        try {
+            const data = req.body;
+
+            await Service.deleteTorrent(data);
+            res.json({ message: 'Torrent Removed.' });
+        } catch (err) {
+            next(err);
+        }
     }
 };

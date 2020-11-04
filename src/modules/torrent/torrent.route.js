@@ -8,5 +8,7 @@ module.exports = function (router) {
 
     router.post('/download', Controller.download);
 
+    router.delete('/delete', Controller.deleteTorrent);
+
     return router;
 };
