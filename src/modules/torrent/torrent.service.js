@@ -231,5 +231,19 @@ module.exports = {
             err.roomId = data.uid;
             Events.error(err);
         }
+    },
+
+    /**
+     * Deletes a torrent that was previously added
+     *
+     * @param {Object} data - Torrent Data
+     * @param {String} data.uid - UUID4 User ID
+     * @param {String} data.name - Name of Torrent to be deleted
+     */
+    async deleteTorrent(data) {
+        if (!data.uid) throw new APIError('User ID Missing. Please Reload Client.', 400);
+
+        const index = this.torrents[data.uid].findIndex((torrent) => torrent.name === data.name);
+        this.torrents[data.uid].splice(index, 1);
     }
 };
