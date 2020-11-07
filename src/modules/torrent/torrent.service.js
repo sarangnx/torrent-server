@@ -137,11 +137,8 @@ module.exports = {
 
         // strip all unimportant data before sending to frontend
         const filtered = torrents.map((t) => {
-            // get only relevent info from Files
-            const files = t.files.map(({ name, path, length }) => ({ name, path, length }));
-
             return {
-                files: files,
+                files: t.files,
                 name: t.name,
                 length: t.length,
                 infoHash: t.infoHash
