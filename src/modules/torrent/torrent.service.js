@@ -137,11 +137,8 @@ module.exports = {
 
         // strip all unimportant data before sending to frontend
         const filtered = torrents.map((t) => {
-            // get only relevent info from Files
-            const files = t.files.map(({ name, path, length }) => ({ name, path, length }));
-
             return {
-                files: files,
+                files: t.files,
                 name: t.name,
                 length: t.length,
                 infoHash: t.infoHash
@@ -170,8 +167,16 @@ module.exports = {
             const user = UserService.getUser(data.uid);
             if (!user.tokens) throw new APIError('Authorize Google Drive before starting download', 401);
 
-            const torrent = torrents.find((t) => t.name === data.name);
-            const parsed = parseTorrent(torrent.magnetURI);
+            const torrent = torrents.findIndex((t) => t.name === data.name);
+
+            // check if any download is in progress for the torrent
+            const isDownloading = this.torrents[data.uid][torrent].files.find(
+                (t) => t.downloadStatus === 'downloading'
+            );
+
+            if (isDownloading) throw new APIError('A download is already in progress.', 409);
+
+            const parsed = parseTorrent(torrents[torrent].magnetURI);
 
             const client = new WebTorrent();
             const gapi = new Gapi(user.tokens);
@@ -188,10 +193,16 @@ module.exports = {
                     let index = t.files.findIndex((f) => f.name === data.item.name);
                     let stream = t.files[index].createReadStream();
 
+                    // mark the file as downloading
+                    this.torrents[data.uid][torrent].files[index].downloadStatus = 'downloading';
+
                     await gapi.upload(t.files[index].path, stream, {
                         roomId: data.uid,
                         path: t.files[index].path
                     });
+
+                    // mark the file as downloaded
+                    this.torrents[data.uid][torrent].files[index].downloadStatus = 'downloaded';
                 }
 
                 // upload a folder
@@ -201,10 +212,16 @@ module.exports = {
                         if (t.files[index].path.startsWith(data.item.path)) {
                             let stream = t.files[index].createReadStream();
 
+                            // mark the file as downloading
+                            this.torrents[data.uid][torrent].files[index].downloadStatus = 'downloading';
+
                             await gapi.upload(t.files[index].path, stream, {
                                 roomId: data.uid,
                                 path: t.files[index].path
                             });
+
+                            // mark the file as downloaded
+                            this.torrents[data.uid][torrent].files[index].downloadStatus = 'downloaded';
                         }
                     }
                 }
@@ -214,10 +231,16 @@ module.exports = {
                     for (let index in t.files) {
                         let stream = t.files[index].createReadStream();
 
+                        // mark the file as downloading
+                        this.torrents[data.uid][torrent].files[index].downloadStatus = 'downloading';
+
                         await gapi.upload(t.files[index].path, stream, {
                             roomId: data.uid,
                             path: t.files[index].path
                         });
+
+                        // mark the file as downloaded
+                        this.torrents[data.uid][torrent].files[index].downloadStatus = 'downloaded';
                     }
                 }
 
